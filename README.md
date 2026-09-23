@@ -37,16 +37,16 @@ Falsifiability 1-hour LOSC test: Recorded 23 Sep 2026 no post-hoc tuning. If no 
 
 ## Figures
 Fig1 Lab Proof — 10 tanks rho=0.909
-![Fig1](fig1_lab_proof.webp)
+![Fig1](fig1_lab_proof.jpg)
 
 Fig2 Prediction — Triple
-![Fig2](fig2_prediction.webp)
+![Fig2](fig2_prediction.jpg)
 
 Fig3 M(t) Model — Memory Regulator
-![Fig3](fig3_M_model.webp)
+![Fig3](fig3_M_model.jpg)
 
 Fig4 Simulation Check — N=100 seed 684
-![Fig4](v4.2_simulation_check.webp)
+![Fig4](v4.2_simulation_check.jpg)
 
 ## Reproducibility
 Core QCID logic — Euler-Maruyama shared seed = same σs dWs: M = 1.5 if bit==1 else 0.2 for direct, M(t)=1.5-1.1*exp(-t/0.1)*sin²(2π*6.6t) for echo, M=-0.2 for 2ms white-hole, dX = -M*X*dt + sigma_s*dW_s[shared] + sigma_i*dW_i[indep]
@@ -57,10 +57,10 @@ Proof Sketch: For SDE dXi = -Mi Xi dt + σs dWs + σi dWi, low-M limit Mi→0.2 
 
 ## Data
 - Khan_Nasir_v42_TriplePrediction.pdf Main paper v4.2
-- fig1_lab_proof.webp Lab rho proof
-- fig2_prediction.webp Triple prediction
-- fig3_M_model.webp M(t) regulator
-- v4.2_simulation_check.webp N=100 sim
+- fig1_lab_proof.jpg Lab rho proof
+- fig2_prediction.jpg Triple prediction
+- fig3_M_model.jpg M(t) regulator
+- v4.2_simulation_check.jpg N=100 sim
 - Sigma_WanaLab_RawData.csv 6000 rows 10 tanks
 - M_t_direct.csv 600 rows dip -0.2 at 0.1202s
 - v4.2.py Code seed 684
