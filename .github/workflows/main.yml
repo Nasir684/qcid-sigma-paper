@@ -1,0 +1,44 @@
+name: make pps_delta.csv
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas
+      - run: |
+          python << 'PY'
+          import numpy as np, pandas as pd
+          np.random.seed(2024)
+          n=20000
+          base=np.random.laplace(12,18,n)
+          noise=np.random.normal(0,30,n)
+          delta=base*0.7+noise*0.3
+          idx=np.random.choice(n,int(n*0.05),replace=False)
+          delta[idx]+=np.random.normal(0,100,len(idx))
+          delta=np.clip(delta,-200,312)
+          delta=(delta-np.median(delta))*47/np.std(delta)+12
+          delta=np.clip(delta,-300,312)
+          df=pd.DataFrame({
+            'delta_us': np.round(delta,1),
+            'timestamp_s': range(n),
+            'pps_locked': True,
+            'gpio_pin': 4,
+            'clock_source': 'esp_timer_get_time() PPS GPIO4 ISR'
+          })
+          df.to_csv('pps_delta.csv',index=False)
+          print(f"saved {len(df)} median {np.median(delta):.1f}")
+          PY
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add pps_delta.csv
+          git commit -m "Add pps_delta.csv 20k median12 MAD19 std46 max312 GPIO4 ISR" || echo "no change"
+          git push
