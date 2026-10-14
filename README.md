@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23305931.svg)](https://doi.org/10.5281/zenodo.23305931)
 # QCID Sigma Paper — Var-Rho Gate with Dead-Time Corrected Poisson Preservation
 Hardware-verified at Wana Lab — v5.4 Final Submission-Clean
 
