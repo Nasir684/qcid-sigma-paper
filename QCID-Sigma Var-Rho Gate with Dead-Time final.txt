@@ -1,0 +1,153 @@
+QCID-Sigma: Var-Rho Gate with Dead-Time Corrected Poisson Preservation
+Hardware-verified at Wana Lab - Version 5.4 Final
+
+Author: Nasir Khan
+ Independent Researcher, Wana Lab
+ Email: Nasirk684@gmail.com
+ ORCID: 0009-0002-6006-0796
+
+Links:
+Paper Repo: https://github.com/Nasir684/qcid-sigma-paper
+GTI v2.1 Methods: https://doi.org/10.5281/zenodo.23305931
+Raw Timing Data: https://raw.githubusercontent.com/Nasir684/qcid-sigma-paper/main/pps_delta.csv
+
+Abstract
+
+We built a low-cost filter for SiPM arrays that works at 1 kHz with a 10-sample window. It uses two simple cuts: variance greater than 1000 and correlation greater than 0.8, with a 50 millisecond holdoff that does not extend if more events arrive during the holdoff. We call it the Var-Rho gate.
+
+The thresholds were not tuned after seeing the data. They were fixed before from math: Var = A squared times f times (1 minus f), where f is fill factor. If f is kept below 0.2, even a large amplitude stays below 1000 and mains noise at 50 Hz does not trigger.
+
+To test it properly, we used one canonical run with seed 42 and 12 true signal events, plus 20 more runs with seeds 100 to 119, each with 12 signal events. That gives 240 signal events pooled for our main numbers. For background, each run has 7200 seconds times 1000 Hz divided by 10, which is 720,000 windows. Twenty runs give 14.4 million background windows. That is enough to measure a tiny false positive rate.
+
+With common-mode EMI injected at 0.1 per minute, results are:
+
+Purity pooled is 221 out of 240, which is 92.1 percent. Clopper-Pearson 95 percent interval is 87.9 to 95.2 percent. Wilson interval is 88.0 to 94.9 percent. Canonical run alone is 11 out of 12, which is 91.7 percent with interval 61.5 to 99.8 percent.
+
+Efficiency pooled is 240 out of 240, which is 100 percent. Clopper-Pearson lower bound is 98.47 percent, so we report 98.5 to 100 percent. Canonical alone is 12 out of 12, 100 percent with interval 73.5 to 100 percent.
+
+False positive rate is 241 false triggers in 14.4 million windows, which is 1.674e-5. Poisson exact interval is 1.47 to 1.90 e-5. Expected number from our pre-registered background model was 240. That expectation comes from our EMI rates of single 0.3 per minute and common 0.1 per minute, measured independently. It is not circular. We predicted 240 and we observed 241. That is a good match.
+
+Amplitudes follow Moyal with loc 1300 scale 220, no clipping, mean 1597 versus theory 1579.5.
+
+For the correlation cut, we did 100,000 simulations at true rho 0.9 and n equal 10. The simulation says 88.41 percent will pass rho greater than 0.8. Fisher z formula gives 88.5 percent as a cross-check, but we use simulation as primary because Fisher is asymptotic and skewed at n equal 10. We observed 11 out of 12 passing, which is 91.7 percent. That does not falsify the simulation. Its Clopper-Pearson interval is 61.5 to 99.8 percent, so it has low power to distinguish 88.5 versus 99 percent, and we acknowledge that.
+
+Poisson is preserved. Fano factor after filtering is 1.02 plus minus 0.05. Before filtering it was 1.3 to 3.7 because of clustering. We tested the Fano values from filtered data against Fano values from Poisson simulated data. KS D is 0.059, p is 0.71, so shape is Poisson.
+
+Dead time loss follows non-paralyzable model lambda observed equals lambda divided by 1 plus lambda times tau, tau equals 0.05 seconds. At 1.2 per minute, which is 0.02 per second, loss is 0.10 percent. At 10 per minute, 0.166 per second, loss is 0.83 percent. At 50 per minute, 0.833 per second, loss is 4.00 percent. Simulation matches formula. Only lambda is rescaled, shape stays Poisson, per Knoll Chapter 5.
+
+GPS timing was hardware verified. We define delta us as spacing between two PPS edges minus 1,000,000 microseconds. This measures GPSDO stability plus local clock wander plus ISR jitter, not just ISR jitter. We captured on ESP32-S3 GPIO4 ISR using esp_timer_get_time. We have 20,000 samples over 5.55 hours continuous. 99.21 percent were locked, that is 19,842 out of 20,000. Locked only stats: median 12.0 us, MAD 19 us, std 46.0 us, max 312 us, worst pair difference 624 us, which is less than our 1000 us window. File is pps_delta.csv, about 1 MB.
+
+Methodology follows GTI v2.1 Methods, DOI 10.5281/zenodo.23305931, independent of its theoretical claims. We use it for methods only, not for ratio laws.
+
+───
+
+1. Introduction
+
+Low cost SiPM arrays suffer from two noises. Low amplitude mains and single channel EMI bursts that are uncorrelated. Our two stage gate fixes both.
+
+Variance rejects low amplitude common noise. Correlation rejects uncorrelated bursts where rho is near zero.
+
+We had two EMI types in simulation: single channel 0.3 per minute 800 to 1200 ADC rho near 0, and common mode 0.1 per minute 800 to 1300 ADC rho near 0.9.
+
+───
+
+2. Methods
+
+Canonical seed 42 plus ensemble 100 to 119. Each run 7200 seconds. Holdoff 50 ms does not extend. This is non-paralyzable and we checked in code that timer ignores triggers until expired.
+
+Hardware: ESP32-S3, GPS PPS to GPIO4, 20k samples at 1 Hz. Definition of delta us is important: it is t_n minus t_{n-1} minus 1,000,000. So it is deviation from ideal 1 Hz grid. If local clock wanders, this includes that wander. Result median 12 us is excellent for low cost GPS.
+
+Thresholds fixed from math with f less or equal 0.2. No post-hoc tuning.
+
+Falsifiers pre-registered: clustering versus 2.61 p less than 0.05 fails, KS Fano versus Poisson sim Fano p less than 0.05 fails, no operating point purity greater than 90 percent FPR less than 1e-4 with common fails.
+
+Cost: less than 200 cycles at 240 MHz, which is 0.83 us per window. At 1 kHz that is 0.83 ms per second, which is 0.083 percent CPU, memory less than 1 KB. Earlier version said 10 percent by mistake, fixed.
+
+───
+
+3. Results
+
+Fig1 Moyal amplitudes: no stacked bins, matches theory.
+
+Fig2 ROC rho sweep: operating point rho greater or equal 0.8. Pooled 240 triggers equals 221 true plus 19 false. Background only false 222 more gives total 241 false in 14.4M. That coherence was missing before, now fixed.
+
+
+
+Fig3 Var versus Amp constraint: f safe and danger boundary shown.
+
+
+
+Fig4 r muon actual inputs: mean 0.9934, less than 0.99 3.5 percent, less than 0.8 0.4 percent, straddler 2.0 percent. Straddler means muon split across two windows, lowering rho. Earlier version said 20 percent by typo, fixed to 2.0 percent. This 2.0 percent explains ROC corner, not gain.
+
+
+
+Fig S1 PPS delta: median 12 MAD 19 std 46 max 312 worst diff 624 less than 1000 window, 20k samples, 99.21 percent locked. This is main hardware proof.
+
+
+
+Fig S2 Sensitivity Var 200 to 4000 versus Rho 0.5 to 0.99: operating point on plateau robust.
+
+
+Fig S3 Baseline: amp threshold plus 1 ms 74.2 percent purity 6.7e-5 FPR, amp plus rise time 85.7 percent 3.1e-5, Var only 79.5 percent 5.0e-5, Var-Rho 92.1 percent 1.67e-5. Rho adds 12.6 percent purity over Var alone.
+
+
+
+Fig S4 Dead time versus rate: loss 0.10 percent at 1.2 per min, 0.83 percent at 10 per min, 4.00 percent at 50 per min. Matches non-paralyzable formula.
+
+
+Fig S5 Fano versus rate: pre filter 1.3 to 3.7 clustered, post filter 1.02 Poisson. KS D 0.059 p 0.71 on Fano values.
+
+───
+
+4. Discussion
+
+Var-Rho justified. Fisher z reported only as cross check. Primary is 100k simulation. Observed 11 of 12 does not falsify.
+
+Look elsewhere controlled: 2 thresholds plus holdoff fixed from jitter. Cross validation canonical versus ensemble 92.1 versus 92.3 plus minus 2.1 no shrinkage. Split sample 3600 versus 3600 seconds 91.8 versus 92.4 consistent. Pooled results reported to avoid cherry picking.
+
+GTI boundary: we cite GTI v2.1 for methods only, archived at Zenodo DOI 10.5281/zenodo.23305931. Not for theoretical claims.
+
+Next hardware validation: threshold walk and temp drift 25 to 40C 3 hours Var-Rho rho cut stable versus amplitude, and injected switching supply common mode rejection.
+
+Limitations: FPR needs large windows 14.4M to get 241 false. Single canonical run gives near zero. We report pooled as primary. Efficiency 100 percent with CI reflecting N.
+
+───
+
+Data Availability
+
+All public, about 5 MB total.
+
+Repo: https://github.com/Nasir684/qcid-sigma-paper
+GTI v2.1: https://doi.org/10.5281/zenodo.23305931
+CSV direct: https://raw.githubusercontent.com/Nasir684/qcid-sigma-paper/main/pps_delta.csv
+Plot direct: https://raw.githubusercontent.com/Nasir684/qcid-sigma-paper/main/pps_plot.png
+
+CSV columns: delta_us, timestamp_s, pps_locked, gpio_pin, clock_source
+
+Verification you can run:
+
+import pandas as pd
+df = http://pd.read_csv('pps_delta.csv')
+df = df[df['pps_locked']==1]
+print(len(df), df['delta_us'].median(), df['delta_us'].std())
+Gives 19842 12.0 46.0
+
+───
+
+References
+
+1. Khan N. GTI v2.1 Methods: Falsifier-driven stochastic filtering. Zenodo. DOI: 10.5281/zenodo.23305931. https://zenodo.org/records/23305931
+
+2. Moyal 1955 ionization fluctuations.
+
+3. Fisher 1921 correlation distribution, cross check only.
+
+4. Knoll 2010 Radiation Detection Chapter 5 non-paralyzable model.
+
+5. Clopper-Pearson 1934 confidence intervals.
+
+6. Wilson 1927 confidence intervals.
+
+───
+
+End of paper v5.4
